@@ -1,0 +1,3 @@
+# Homero
+## Web app for SimpsonsTV
+Simple web application to launch MPV commands for simple actions on a Simpsons TV: pause, rewind, mute, change episode...
