@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Episodios</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="/static/episodes.js" defer></script>
+</head>
+
+<body>
+    <div class="top">
+        <h2 style="margin:0">Episodios</h2>
+        <a href="/" class="muted">← Volver</a>
+    </div>
+
+    <p class="muted">
+        Archivo: <code>{{ episodes_file }}</code>
+        {% if dry_run %}· <strong>DRY-RUN</strong>{% endif %}
+    </p>
+
+    {% if not seasons %}
+    <p class="muted">No hay episodios válidos.</p>
+    {% endif %}
+
+    {% for season, eps in seasons.items() %}
+    <details open>
+        <summary>Temporada {{ season }} <span class="muted">· {{ eps|length }} eps</span></summary>
+        <div class="season">
+            {% for e in eps %}
+            <div class="ep">
+                <button class="btnLoad" data-index="{{ e.index }}">Reproducir</button>
+                <div>
+                    <div><strong>{{ e.label }}</strong></div>
+                    <div class="path">{{ e.path }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </details>
+    {% endfor %}
+
+    <pre id="out" class="muted pre">—</pre>
+</body>
+
+</html>
