@@ -9,13 +9,12 @@ All episodes have the same format: "SxxExx[_Title].ext", where "Title" can
 contain whitespaces and other characters.
 
 """
+from __future__ import annotations
 
-import os
 from dataclasses import dataclass
 from pathlib import Path
 
-PATH_LOCAL_EPISODES = Path(__file__).parent.parent / "data" / "mock.m3u"
-EPISODES_FILE = os.getenv("PATH_HOMERO_EPISODES", PATH_LOCAL_EPISODES)
+from loguru import logger
 
 
 @dataclass(frozen=True)
@@ -28,7 +27,7 @@ class Episode:
     label: str  # e.g., S01E01 - Title
 
 
-def load_episodes(*, verbose: bool = False) -> list[dict]:
+def load_episodes(path: Path | str) -> list[dict]:
     """Loads the episodes from the episodes file
 
     Returns a dict seasion -> [episodes], sorted. Each episode is a Episode
@@ -37,7 +36,7 @@ def load_episodes(*, verbose: bool = False) -> list[dict]:
     """
     # List of episodes
     episodes = []
-    with open(EPISODES_FILE, "r", encoding="utf-8") as f:
+    with open(path, "r", encoding="utf-8") as f:
         for index, line in enumerate(f):
             line = line.strip()
             if not line or line.startswith("#"):
@@ -77,14 +76,5 @@ def load_episodes(*, verbose: bool = False) -> list[dict]:
     seasons = {}
     for ep in episodes:
         seasons.setdefault(ep.season, []).append(ep)
-
-    # Verbose
-    if verbose:
-        total_eps = sum(len(eps) for eps in seasons.values())
-        for season in sorted(seasons):
-            print(f"[S{season:02d}] {len(seasons[season])} episodes")
-            for ep in seasons[season]:
-                print(f"  - {ep.label} ({ep.filepath})")
-        print(f"Total episodes loaded: {total_eps}")
-
+        logger.debug(f"Loaded episode: {ep}")
     return seasons

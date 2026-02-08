@@ -10,6 +10,8 @@ import socket
 from dataclasses import dataclass
 from typing import Any
 
+from loguru import logger
+
 
 #
 # MPV Templates
@@ -38,6 +40,11 @@ class MPVResponse:
             request_id=obj.get("request_id", 0),
         )
 
+    def to_json(self) -> str:
+        return json.dumps(
+            {"error": self.error, "data": self.data, "request_id": self.request_id}
+        )
+
 
 #
 # Main class
@@ -51,17 +58,22 @@ class MPVClient:
         self.socket_path = socket_path
         self.dry_run = dry_run
 
-    def send(self, command: str) -> tuple[MPVCommand, MPVResponse]:
+    def send(self, command: str | list[str]) -> tuple[MPVCommand, MPVResponse]:
         """Builds and sends a command to MPV, returns the command and response
         objects.
 
         """
         # Prepare command
+        if isinstance(command, str):
+            command = list(command.split())
+
         mpv_command = MPVCommand(
-            command=list(command.split()),
+            command=command,
             request_id=MPVClient._REQUEST_COUNTER,
         )
         MPVClient._REQUEST_COUNTER += 1
+
+        logger.info(f"Sending command to MPV: {mpv_command.to_json()}")
 
         # If DRY_RUN, return command and a dummy response
         if self.dry_run:
@@ -88,6 +100,7 @@ class MPVClient:
         # Parse response
         res = response.split(b"\n")[0].decode("utf-8", errors="replace").strip()
         if not res:
+            logger.warning("Empty response received from MPV")
             return mpv_command, MPVResponse(
                 error="Empty response from MPV",
                 data=None,
@@ -95,8 +108,10 @@ class MPVClient:
             )
         try:
             mpv_response = MPVResponse.from_json(res)
+            logger.info(f"Received response from MPV: {mpv_response.to_json()}")
             return mpv_command, mpv_response
         except json.JSONDecodeError as e:
+            logger.error(f"Failed to decode MPV response: {e}")
             return mpv_command, MPVResponse(
                 error=f"Invalid JSON response from MPV: {e}",
                 data=res,
