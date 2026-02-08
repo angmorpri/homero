@@ -6,23 +6,10 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>MPV Remote</title>
     <link rel="stylesheet" href="/static/style.css">
-    <script>
-        window.HOMERO = {
-            dryRun: JSON.parse('{{ "true" if dry_run else "false" }}'),
-            cooldownMs: JSON.parse('{{ cooldown_ms }}'),
-        };
-    </script>
     <script src="/static/app.js" defer></script>
 </head>
 
 <body>
-    <div class="topbar">
-        <h2 style="margin:0">MPV Remote</h2>
-        <div class="pill {{ 'warn' if dry_run else 'ok' }}">
-            {{ 'DRY-RUN' if dry_run else 'LIVE' }} · cooldown {{ cooldown_ms }}ms
-        </div>
-    </div>
-
     <div class="row" style="margin-top:14px">
         <button id="btnPlayPause" data-action="toggle_pause">⏸</button>
         <button id="btnMute" data-action="toggle_mute">🔊</button>
