@@ -85,17 +85,68 @@ class MPVClient:
 
         # Send command to MPV
         data = (mpv_command.to_json() + "\n").encode("utf-8")
-        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
-            client.connect(self.socket_path)
-            client.sendall(data)
+        try:
+            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
+                client.settimeout(5)
+                client.connect(self.socket_path)
+                client.sendall(data)
 
-            # Read response
-            response = b""
-            while True:
-                chunk = client.recv(4096)
-                if not chunk:
-                    break
-                response += chunk
+                try:
+                    client.shutdown(socket.SHUT_WR)
+                except OSError:
+                    pass
+
+                # Read response
+                response = b""
+                while True:
+                    chunk = client.recv(4096)
+                    if not chunk:
+                        break
+                    response += chunk
+                    if b"\n" in response:
+                        break
+
+        except socket.timeout:
+            logger.warning("Timeout while connecting to MPV socket.")
+            return mpv_command, MPVResponse(
+                error="MPV socket timeout",
+                data=None,
+                request_id=mpv_command.request_id,
+            )
+
+        except FileNotFoundError:
+            logger.warning(f"MPV socket not found at {self.socket_path}.")
+            return mpv_command, MPVResponse(
+                error="MPV socket not found",
+                data=None,
+                request_id=mpv_command.request_id,
+            )
+
+        except ConnectionRefusedError:
+            logger.warning(
+                f"Connection refused when connecting to MPV socket at {self.socket_path}."
+            )
+            return mpv_command, MPVResponse(
+                error="Connection refused",
+                data=None,
+                request_id=mpv_command.request_id,
+            )
+
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to decode MPV response: {e}")
+            return mpv_command, MPVResponse(
+                error=f"Invalid JSON response from MPV: {e}",
+                data=None,
+                request_id=mpv_command.request_id,
+            )
+
+        except Exception as e:
+            logger.error(f"Unexpected error while communicating with MPV: {e}")
+            return mpv_command, MPVResponse(
+                error=f"Unexpected error: {e}",
+                data=None,
+                request_id=mpv_command.request_id,
+            )
 
         # Parse response
         res = response.split(b"\n")[0].decode("utf-8", errors="replace").strip()
