@@ -145,7 +145,7 @@ async def api_action(payload: dict):
         return mpv_client.send("cycle mute")
     elif action == "next":
         res1 = mpv_client.send("playlist-next force")
-        res2 = mpv_client.send("set_property time-pos 0")
+        res2 = mpv_client.send("set time-pos 0")
         return res1, res2
     elif action == "prev":
         return mpv_client.send("playlist-prev force")
