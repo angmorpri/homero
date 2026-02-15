@@ -16,7 +16,6 @@
     </div>
 
     <p class="muted">
-        Archivo: <code>{{ episodes_file }}</code>
         {% if dry_run %}· <strong>DRY-RUN</strong>{% endif %}
     </p>
 
@@ -33,7 +32,7 @@
                 <button class="btnLoad" data-index="{{ e.index }}">Reproducir</button>
                 <div>
                     <div><strong>{{ e.label }}</strong></div>
-                    <div class="path">{{ e.path }}</div>
+                    <div class="path">{{ e.filepath }}</div>
                 </div>
             </div>
             {% endfor %}

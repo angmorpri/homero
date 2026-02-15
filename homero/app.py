@@ -9,6 +9,7 @@ app.
 
 import os
 import sys
+from itertools import groupby
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -70,11 +71,13 @@ logger.info(f"MPV Client initialized with socket: {MPV_SOCKET}")
 #
 # Episodes
 #
-episodes = load_episodes(EPISODES_FILE)
-episodes_list = [ep for eps in episodes.values() for ep in eps]
+episodes, n_seasons = load_episodes(EPISODES_FILE)
 logger.info(
-    f"Loaded {len(episodes_list)} episodes from {len(episodes)} seasons from {EPISODES_FILE}"
+    f"Loaded {len(episodes)} episodes from {n_seasons} seasons from {EPISODES_FILE}"
 )
+episodes_per_season = {
+    season: list(eps) for season, eps in groupby(episodes, key=lambda e: e.season)
+}
 
 #
 # FastAPI app
@@ -91,6 +94,7 @@ logger.info(
 @app.get("/")
 def index(request: Request):
     """Renders the index page."""
+    # Check current episode in MPV
     return templates.TemplateResponse(
         "index.html",
         {
@@ -107,7 +111,7 @@ def list_episodes(request: Request):
         "episodes.html",
         {
             "request": request,
-            "seasons": episodes,
+            "seasons": episodes_per_season,
             "dry_run": DRY_RUN,
         },
     )
@@ -140,7 +144,9 @@ async def api_action(payload: dict):
     elif action == "toggle_mute":
         return mpv_client.send("cycle mute")
     elif action == "next":
-        return mpv_client.send("playlist-next force")
+        res1 = mpv_client.send("playlist-next force")
+        res2 = mpv_client.send("set_property time-pos 0")
+        return res1, res2
     elif action == "prev":
         return mpv_client.send("playlist-prev force")
     else:
@@ -186,7 +192,7 @@ async def api_load(payload: dict):
 
     # Get all episodes
     try:
-        target = episodes_list[idx]
+        target = episodes[idx]
     except IndexError:
         logger.warning(f"Episode not found for index: {idx}")
         return JSONResponse(
