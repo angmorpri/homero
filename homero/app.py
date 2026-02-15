@@ -71,9 +71,9 @@ logger.info(f"MPV Client initialized with socket: {MPV_SOCKET}")
 # Episodes
 #
 episodes = load_episodes(EPISODES_FILE)
-total_episodes = sum(len(eps) for eps in episodes.values())
+episodes_list = [ep for eps in episodes.values() for ep in eps]
 logger.info(
-    f"Loaded {total_episodes} episodes from {len(episodes)} seasons from {EPISODES_FILE}"
+    f"Loaded {len(episodes_list)} episodes from {len(episodes)} seasons from {EPISODES_FILE}"
 )
 
 #
@@ -158,7 +158,7 @@ async def api_action(payload: dict):
 async def api_load(payload: dict):
     """Loads an episode in MPV.
 
-    Expects JSON payload with {"filepath": str}
+    Expects JSON payload with {"index": int}
 
     """
     logger.info(f"Received load request: {payload}")
@@ -185,7 +185,6 @@ async def api_load(payload: dict):
         )
 
     # Get all episodes
-    episodes_list = [ep for eps in episodes.values() for ep in eps]
     try:
         target = episodes_list[idx]
     except IndexError:

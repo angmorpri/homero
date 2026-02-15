@@ -3,7 +3,8 @@
  * UI accordingly.
  */
 
-
+const COOLDOWN_MS = 200;  // Prevent spamming
+let cooldownTimer = null;
 let busy = false;
 
 async function setUp() {
@@ -34,6 +35,15 @@ function setAllButtonsDisabled(status) {
     document.querySelectorAll("button[data-action]").forEach((btn) => {
         btn.disabled = status;
     });
+}
+
+function startCooldown() {
+    if (cooldownTimer) clearTimeout(cooldownTimer);
+    setAllButtonsDisabled(true);
+    cooldownTimer = setTimeout(() => {
+        setAllButtonsDisabled(false);
+        cooldownTimer = null;
+    }, COOLDOWN_MS);
 }
 
 async function doAction(action, btn) {
@@ -73,8 +83,8 @@ async function doAction(action, btn) {
         }
     }
 
-    // 4. Re-enable the button after the action is complete
-    setAllButtonsDisabled(false);
+    // 4. Re-enable buttons after cooldown
+    startCooldown();
     busy = false;
 }
 

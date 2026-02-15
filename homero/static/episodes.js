@@ -2,7 +2,8 @@
  * This script handles the loading of episodes and updates the UI accordingly.
  */
 
-
+const COOLDOWN_MS = 200;  // Prevent spamming
+let cooldownTimer = null;
 let busy = false;
 
 async function setUp() {
@@ -24,6 +25,15 @@ function setAllButtonsDisabled(status) {
     document.querySelectorAll("button[data-index]").forEach((btn) => {
         btn.disabled = status;
     });
+}
+
+function startCooldown() {
+    if (cooldownTimer) clearTimeout(cooldownTimer);
+    setAllButtonsDisabled(true);
+    cooldownTimer = setTimeout(() => {
+        setAllButtonsDisabled(false);
+        cooldownTimer = null;
+    }, COOLDOWN_MS);
 }
 
 async function loadEpisode(index) {
@@ -48,8 +58,8 @@ async function loadEpisode(index) {
     const out = document.getElementById("lastAction");
     out.textContent = JSON.stringify(j, null, 2);
 
-    // 3. Re-enable the buttons after the action is complete
-    setAllButtonsDisabled(false);
+    // 3. Re-enable buttons after cooldown
+    startCooldown();
     busy = false;
 }
 

@@ -84,8 +84,8 @@ class MPVClient:
             )
 
         # Send command to MPV
-        data = (mpv_command.to_json() + "\n").encode("utf-8")
         try:
+            data = (mpv_command.to_json() + "\n").encode("utf-8")
             with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
                 client.settimeout(5)
                 client.connect(self.socket_path)
