@@ -58,7 +58,7 @@ class MPVClient:
         self.socket_path = socket_path
         self.dry_run = dry_run
 
-    def send(self, command: str | list[str]) -> tuple[MPVCommand, MPVResponse]:
+    def send(self, command: str | list[Any]) -> tuple[MPVCommand, MPVResponse]:
         """Builds and sends a command to MPV, returns the command and response
         objects.
 
